@@ -1,5 +1,6 @@
 package com.stackroute.datamunger;
-
+import java.util.ArrayList;
+import java.util.Arrays;
 /*There are total 5 DataMungertest files:
  * 
  * 1)DataMungerTestTask1.java file is for testing following 3 methods
@@ -26,6 +27,20 @@ package com.stackroute.datamunger;
  * the test cases together.
  */
 
+/*import sun.jvm.hotspot.debugger.win32.coff.DebugVC50SSSrcLnSeg;
+
+import javax.swing.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
+
+import static jdk.nashorn.internal.objects.NativeString.substring;
+
+ */
+
+import java.util.ArrayList;
+
 public class DataMunger {
 
 	/*
@@ -33,9 +48,10 @@ public class DataMunger {
 	 * and display it on console
 	 */
 
-	public String[] getSplitStrings(String queryString) {
-
-		return null;
+	public String[] getSplitStrings(String queryString){
+		String stringOne = queryString.replaceAll("Bangalore","bangalore");
+		String[] string = stringOne.split("\\s");
+        return string;
 	}
 
 	/*
@@ -46,9 +62,14 @@ public class DataMunger {
 	 * Please consider this while extracting the file name in this method.
 	 */
 
-	public String getFileName(String queryString) {
+	public String getFileName(String queryString){
+		int positionOne = queryString.indexOf("from") +5;
+		//System.out.println(positionOne);
+		int positionTwo = queryString.indexOf("csv") +3;
+		//System.out.println(positionTwo);
 
-		return null;
+		queryString = queryString.substring(positionOne,positionTwo);
+		return queryString;
 	}
 
 	/*
@@ -62,8 +83,14 @@ public class DataMunger {
 	 */
 	
 	public String getBaseQuery(String queryString) {
-
-		return null;
+		int positionOne = queryString.indexOf("from") +5;
+		int positionTwo = queryString.indexOf(" ",positionOne);
+		if(positionTwo == -1)
+		{
+			positionTwo = queryString.length();
+		}
+		queryString =  queryString.substring(0,positionTwo);
+        return queryString;
 	}
 
 	/*
@@ -79,8 +106,11 @@ public class DataMunger {
 	 */
 	
 	public String[] getFields(String queryString) {
+		queryString = queryString.toLowerCase();
+		String[] string = queryString.split(" ")[1].split(",");
+		//System.out.println(string);
 
-		return null;
+		return string;
 	}
 
 	/*
@@ -94,8 +124,34 @@ public class DataMunger {
 	 */
 	
 	public String getConditionsPartQuery(String queryString) {
+		String string = queryString.toLowerCase();
+		String[] array = getSplitStrings(string);
+		if(!string.contains("where"))
+		{
+			return null;
+		}
+		String condition = "";
+		for(int i = 0; i<array.length; i++)
+		{
+			if(array[i].equals("where"))
+			{
+				for(int j=i+1; j<array.length; j++)
+				{
+					if (array[j].equals("order")||array[j].equals("group"))
+					{
+						break;
+					}
+					else
+					{
+						condition = condition.concat(" "+array[j]);
+					}
 
-		return null;
+				}
+				break;
+
+			}
+	    }
+		return condition.trim();
 	}
 
 	/*
@@ -114,8 +170,15 @@ public class DataMunger {
 	 */
 
 	public String[] getConditions(String queryString) {
+		String string = queryString.toLowerCase();
+		int positionOne = string.indexOf("where");
+		if(positionOne == -1)
+		{
+			return null;
 
-		return null;
+		}
+		String[] array = string.split("where")[1].trim().split("group by | order by")[0].trim().split(" and | or ");
+		return array;
 	}
 
 	/*
@@ -130,8 +193,33 @@ public class DataMunger {
 	 */
 
 	public String[] getLogicalOperators(String queryString) {
+		int positionOne = queryString.indexOf("where");
+		if(positionOne == -1){
+			return null;
+		}
+		String [] array = queryString.split("where")[1].trim().split(" ");
+		int i,count =0,j=0;
+		for(i=0; i<array.length; i++){
+			if(array[i].equals("and") || array[i].equals("or")){
+				count++;
+			}
+		}
+		String [] logical = new String[count];
+		for(i=0; i<array.length; i++){
+			if(array[i].equals("and")){
+				logical[j] = array[i];
+				j++;
+			}
+			else if (array[i].equals("or")){
+				logical[j] = array[i];
+				j++;
+			}
+			else{
+				continue;
+			}
+		}
 
-		return null;
+		return logical;
 	}
 
 	/*
@@ -143,8 +231,15 @@ public class DataMunger {
 	 */
 
 	public String[] getOrderByFields(String queryString) {
+		if(!queryString.contains("order by"))
+		{
 
 		return null;
+	}
+		String [] array = queryString.split("order by ")[1].trim().split(" ");
+		return array;
+
+
 	}
 
 	/*
@@ -157,8 +252,12 @@ public class DataMunger {
 	 */
 
 	public String[] getGroupByFields(String queryString) {
+		if(!queryString.contains("group by")) {
 
-		return null;
+			return null;
+		}
+		String [] array = queryString.split("group by ")[1].trim().split(" ");
+		return array;
 	}
 
 	/*
@@ -172,6 +271,22 @@ public class DataMunger {
 	 */
 
 	public String[] getAggregateFunctions(String queryString) {
+
+
+		if(queryString.contains("count") || queryString.contains("sum") || queryString.contains("min") || queryString.contains("max") || queryString.contains("avg") )
+		{
+			ArrayList<String> list = new ArrayList<String>();
+			String [] arrayOfStringOne = queryString.split(" ");
+			String [] arrayOfStringTwo = arrayOfStringOne[1].trim().split(",");
+			for(int i=0; i<arrayOfStringTwo.length; i++) {
+				if (arrayOfStringTwo[i].contains("(")) {
+					list.add(arrayOfStringTwo[i]);
+				}
+			}
+			return list.toArray(new String[list.size()]);
+
+
+		}
 
 		return null;
 	}
